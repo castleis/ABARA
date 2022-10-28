@@ -27,6 +27,17 @@
     {% for comment in comments %}
       <li>
         {{ comment.user }} - {{ comment.content }}
+        <div>
+          <form action="{% url 'articles:comment_likes' article.pk comment.pk %}" method="POST">
+            {% csrf_token %}
+            {% if request.user in comment.comment_like_users.all %}
+              <input type="submit" value="좋아요 취소">
+            {% else %}
+              <input type="submit" value="좋아요">
+            {% endif %}
+          </form>
+          추천수: {{ comment.comment_like_users.all|length }}
+        </div>
         {% if request.user == comment.user %}
           <form action="{% url 'articles:comments_delete' article.pk comment.pk %}" method="POST">
             {% csrf_token %}
