@@ -1,7 +1,8 @@
-from django.shortcuts import render, redirect
+from django.shortcuts import render, redirect, get_object_or_404
 from django.views.decorators.http import require_http_methods, require_POST, require_safe
 from django.contrib.auth.decorators import login_required
-# from django.http import HttpResponse, HttpResponseForbidden
+from django.http import HttpResponse, HttpResponseForbidden
+import json
 from .models import Article, Comment
 from .forms import ArticleForm, CommentForm
 
@@ -113,12 +114,19 @@ def comments_delete(request, article_pk, comment_pk):
 
 @require_POST
 def likes(request, article_pk):
+    article = get_object_or_404(Article, pk=article_pk)
     if request.user.is_authenticated:
-        article = Article.objects.get(pk=article_pk)
         if article.like_users.filter(pk=request.user.pk).exists():
             article.like_users.remove(request.user)
+            message = '좋아요 취소'
         else:
             article.like_users.add(request.user)
-        return redirect('articles:index')
+            message = '좋아요'
+        context = {
+            'message': message,
+            'likes_count': article.like_count()
+        }
+        return HttpResponse(json.dumps(context), context_type="application/json")
+        # return redirect('articles:index')
     return redirect('accounts:login')
     
