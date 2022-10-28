@@ -16,6 +16,17 @@
       <input type="submit" value="DELETE">
     </form>
   {% endif %}
+  <div>
+    <form id='like-form'>
+      {% csrf_token %}
+      {% if request.user in article.like_users.all %}
+        <input type="submit" value="좋아요 취소" name="{{ article_pk }}">
+      {% else %}
+        <input type="submit" value="좋아요" name="{{ article_pk }}">
+      {% endif %}
+    </form>
+    <span id="like_counting">{{ article.like_count }}</span>명이 이 게시물을 좋아합니다
+  </div>
   <hr>
   <a href="{% url 'articles:index' %}">뒤로가기</a>
   <hr>
@@ -60,3 +71,36 @@
     <a href="{% url 'accounts:login' %}">댓글을 작성하려면 로그인 하세요.</a>
   {% endif %}
 {% endblock content %}
+{% block script %}
+<script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+<script>
+  const likeForm = document.querySelector('#like-form')
+  const likeInput = documnet.querySelector('input')
+  //csrf token
+  // const xhttp = new XMLHttpRequest()
+  // const csrfToken = documnet.querySelector('[name=csrfmiddlewaretoken]').value
+  // xhttp.open('POST', 'articles/likes/', true)
+  // xhttp.setRequestHeader('X-CSRFToken', csrfToken)
+  
+  $(".like").click(function () {
+    const article_pk = $(this).attr('article_pk')
+    $.ajax({
+      method: "POST",
+      url: "{% url 'articles:likes' article.pk %}",
+      data: {
+        'article_pk': article_pk,
+        'csrfmiddlewaretoken': '{{ csrf_token }}',
+      },
+      dataType: "json",
+      success: function (response) {
+        console.log(response.message);
+        $('#like').replaceWith('<p id="like">'+response.message+'</p>')
+        $("#like_counting").replaceWith('<span id="like_counting">'+response.message+'</span>')
+      },
+      error: function (request, status, error) {
+        alert(error)
+      },
+    })
+  })
+</script>
+{% endblock script %}
